@@ -1,0 +1,12 @@
+[Unit]
+Description=Days Left wallpaper: render today's wallpaper and set it
+After=graphical-session.target
+
+[Service]
+Type=oneshot
+Environment=PYTHONPATH=%h/.local/share/daysleft/app
+ExecStart=/usr/bin/python3 -m daysleft apply
+
+[Install]
+# Also run at every login, in case the date changed while logged out.
+WantedBy=graphical-session.target

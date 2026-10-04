@@ -1,0 +1,12 @@
+[Unit]
+Description=Update the Days Left wallpaper just after midnight
+
+[Timer]
+OnCalendar=*-*-* 00:00:05
+AccuracySec=1s
+# Catch up on boot if the machine was off at midnight. A machine asleep at
+# midnight runs it on wake, since calendar timers follow the wall clock.
+Persistent=true
+
+[Install]
+WantedBy=timers.target
