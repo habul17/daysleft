@@ -4,6 +4,7 @@ import json
 import os
 import shutil
 from dataclasses import asdict, dataclass
+from datetime import date
 from pathlib import Path
 
 CONFIG_FILE = (Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))
@@ -12,7 +13,8 @@ DATA_DIR = Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local/share")) /
 
 # The choices offered in the settings app: stored value -> label.
 STYLES = {"corner": "Corner", "centered": "Centered", "dots": "Year in dots", "ring": "Progress ring"}
-UNITS = {"days": "Days left", "weeks": "Weeks left", "percent": "% of year gone"}
+UNITS = {"days": "Days left", "weeks": "Weeks left", "percent": "% of year gone",
+         "challenge": "Challenge day"}
 THEMES = {"system": "Match system", "dark": "Dark", "light": "Light"}
 # GNOME's accent colours; "neutral" draws progress in the text colour.
 ACCENTS = {
@@ -35,6 +37,8 @@ class Settings:
     theme: str = "system"
     accent: str = "neutral"
     photo: str | None = None  # our own copy of the photo, see import_photo()
+    challenge_name: str = "Challenge"
+    challenge_start: str | None = None  # ISO date of day 1
 
 
 _CHOICES = {"style": STYLES, "unit": UNITS, "theme": THEMES, "accent": ACCENTS}
@@ -54,6 +58,12 @@ def load() -> Settings:
             setattr(settings, name, saved[name])
     if isinstance(saved.get("photo"), str):
         settings.photo = saved["photo"]
+    if isinstance(saved.get("challenge_name"), str):
+        settings.challenge_name = saved["challenge_name"]
+    try:
+        settings.challenge_start = date.fromisoformat(saved["challenge_start"]).isoformat()
+    except (KeyError, TypeError, ValueError):
+        pass
     return settings
 
 

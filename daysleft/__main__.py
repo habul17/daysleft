@@ -13,7 +13,7 @@ from datetime import date
 from pathlib import Path
 
 from . import backends, settings as config
-from .render import render
+from .render import counter, render
 from .year import year_status
 
 WALLPAPER_DIR = config.DATA_DIR / "wallpapers"
@@ -33,8 +33,8 @@ def apply(today: date) -> None:
 
     if backend.wallpaper_uris() != (light.as_uri(), dark.as_uri()):
         backend.set_wallpaper(light, dark)
-        print(f"Wallpaper set: {status.days_left} days left in {status.year} "
-              f"({settings.style}, {settings.theme})")
+        number, caption = counter(status, settings)
+        print(f"Wallpaper set: {number} {caption} ({settings.style}, {settings.theme})")
 
     for old in WALLPAPER_DIR.glob("daysleft-*.png"):
         if old not in (light, dark):

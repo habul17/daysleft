@@ -66,6 +66,9 @@ class Window(Adw.ApplicationWindow):
         wallpaper = Adw.PreferencesGroup(title="Wallpaper")
         wallpaper.add(self._choice_row("Style", "style", config.STYLES))
         wallpaper.add(self._choice_row("Shows", "unit", config.UNITS))
+        self.challenge_rows = self._challenge_rows()
+        for row in self.challenge_rows:
+            wallpaper.add(row)
         wallpaper.add(self._photo_row())
         page.add(wallpaper)
 
@@ -89,6 +92,38 @@ class Window(Adw.ApplicationWindow):
         row.set_selected(values.index(getattr(self.settings, key)))
         row.connect("notify::selected", lambda row, _: self._change(key, values[row.get_selected()]))
         return row
+
+    def _challenge_rows(self):
+        """Name and start date of the challenge; shown only while counting it."""
+        name = Adw.EntryRow(title="Challenge name", text=self.settings.challenge_name)
+        name.connect("changed", lambda row: self._change("challenge_name", row.get_text()))
+
+        calendar = Gtk.Calendar()
+        start = self._challenge_start()
+        calendar.select_day(GLib.DateTime.new_local(start.year, start.month, start.day, 0, 0, 0))
+        calendar.connect("day-selected", self._on_start_picked)
+        self.start_button = Gtk.MenuButton(valign=Gtk.Align.CENTER, popover=Gtk.Popover(child=calendar))
+        start_row = Adw.ActionRow(title="Day 1", subtitle="The date the challenge started")
+        start_row.add_suffix(self.start_button)
+
+        rows = [name, start_row]
+        self._update_challenge_rows(rows)
+        return rows
+
+    def _challenge_start(self) -> date:
+        start = self.settings.challenge_start
+        return date.fromisoformat(start) if start else date.today()
+
+    def _on_start_picked(self, calendar):
+        picked = calendar.get_date()
+        start = date(picked.get_year(), picked.get_month(), picked.get_day_of_month())
+        self._change("challenge_start", start.isoformat())
+
+    def _update_challenge_rows(self, rows=None):
+        for row in rows or self.challenge_rows:
+            row.set_visible(self.settings.unit == "challenge")
+        start = self._challenge_start()
+        self.start_button.set_label(f"{start:%b} {start.day}, {start.year}")
 
     def _accent_row(self):
         row = Adw.ActionRow(title="Accent")
@@ -160,6 +195,10 @@ class Window(Adw.ApplicationWindow):
 
     def _change(self, key, value):
         setattr(self.settings, key, value)
+        if key == "unit" and value == "challenge" and not self.settings.challenge_start:
+            self.settings.challenge_start = date.today().isoformat()  # starting today
+        if key in ("unit", "challenge_start"):
+            self._update_challenge_rows()
         config.save(self.settings)
         self._refresh_preview()
         if self._apply_source:

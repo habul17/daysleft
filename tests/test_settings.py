@@ -20,12 +20,14 @@ class SettingsTest(unittest.TestCase):
         self.assertEqual(config.load(), config.Settings())
 
     def test_round_trip(self):
-        saved = config.Settings(style="ring", unit="weeks", theme="light", accent="teal", photo="/x.jpg")
+        saved = config.Settings(style="ring", unit="challenge", theme="light", accent="teal",
+                                photo="/x.jpg", challenge_name="100X", challenge_start="2026-10-12")
         config.save(saved)
         self.assertEqual(config.load(), saved)
 
     def test_invalid_values_fall_back_to_defaults(self):
-        config.CONFIG_FILE.write_text('{"style": "spiral", "accent": "teal", "photo": 5}')
+        config.CONFIG_FILE.write_text(
+            '{"style": "spiral", "accent": "teal", "photo": 5, "challenge_start": "yesterday"}')
         self.assertEqual(config.load(), config.Settings(accent="teal"))
 
     def test_corrupt_file(self):

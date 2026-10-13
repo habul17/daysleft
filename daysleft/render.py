@@ -14,6 +14,7 @@ import calendar
 import math
 import subprocess
 from dataclasses import dataclass
+from datetime import date
 from functools import cache, lru_cache
 from pathlib import Path
 
@@ -37,26 +38,44 @@ DARK = Palette(background=(0, 0, 0), ink=(236, 236, 238), scrim=(0, 0, 0), scrim
 LIGHT = Palette(background=(242, 241, 238), ink=(28, 28, 30), scrim=(255, 255, 255), scrim_amount=0.6)
 
 
-def counter(status: YearStatus, unit: str) -> tuple[str, str]:
+def counter(status: YearStatus, settings: Settings) -> tuple[str, str]:
     """The big number and the caption under it."""
     year = status.year
-    if unit == "percent":
+    if settings.unit == "challenge":
+        return _challenge_counter(status.today, settings)
+    if settings.unit == "percent":
         gone = (status.days_in_year - status.days_left) * 100 // status.days_in_year
         return f"{gone}%", f"of {year} gone"
-    if unit == "weeks":
+    if settings.unit == "weeks":
         count, name, last = status.days_left // 7, "week", f"last week of {year}"
     else:
         count, name, last = status.days_left, "day", f"last day of {year}"
     if count == 0:
         return "0", last
-    return str(count), f"{name}{'' if count == 1 else 's'} left in {year}"
+    return str(count), f"{_plural(count, name)} left in {year}"
+
+
+def _challenge_counter(today: date, settings: Settings) -> tuple[str, str]:
+    """Counts up from the challenge's start date, which is day 1; before that,
+    counts down to it."""
+    name = settings.challenge_name.strip() or "challenge"
+    start = date.fromisoformat(settings.challenge_start) if settings.challenge_start else today
+    if today < start:
+        until = (start - today).days
+        return str(until), f"{_plural(until, 'day')} until {name}"
+    day = (today - start).days + 1
+    return str(day), f"{_plural(day, 'day')} in {name}"
+
+
+def _plural(count: int, word: str) -> str:
+    return word if count == 1 else f"{word}s"
 
 
 def render(status: YearStatus, width: int, height: int, settings: Settings, dark: bool) -> Image.Image:
     palette = DARK if dark else LIGHT
     photo = _photo_or_none(settings.photo, width, height)
     canvas = _Canvas(width, height, palette, ACCENTS[settings.accent], on_photo=photo is not None)
-    number, caption = counter(status, settings.unit)
+    number, caption = counter(status, settings)
     _STYLES[settings.style](canvas, status, number, caption.upper())
 
     marks = canvas.layer.resize((width, height), Image.Resampling.LANCZOS)

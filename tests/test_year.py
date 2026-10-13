@@ -2,6 +2,7 @@ import unittest
 from datetime import date
 
 from daysleft.render import counter
+from daysleft.settings import Settings
 from daysleft.year import year_status
 
 
@@ -27,8 +28,8 @@ class YearStatusTest(unittest.TestCase):
 
 
 class CounterTest(unittest.TestCase):
-    def check(self, day, unit, expected):
-        self.assertEqual(counter(year_status(day), unit), expected)
+    def check(self, day, unit, expected, **settings):
+        self.assertEqual(counter(year_status(day), Settings(unit=unit, **settings)), expected)
 
     def test_days(self):
         self.check(date(2026, 10, 4), "days", ("88", "days left in 2026"))
@@ -44,6 +45,20 @@ class CounterTest(unittest.TestCase):
         self.check(date(2026, 1, 1), "percent", ("0%", "of 2026 gone"))
         self.check(date(2026, 10, 4), "percent", ("75%", "of 2026 gone"))
         self.check(date(2026, 12, 31), "percent", ("100%", "of 2026 gone"))
+
+    def test_challenge_counts_start_date_as_day_one(self):
+        challenge = {"challenge_name": "100X", "challenge_start": "2026-10-12"}
+        self.check(date(2026, 10, 12), "challenge", ("1", "day in 100X"), **challenge)
+        self.check(date(2026, 10, 13), "challenge", ("2", "days in 100X"), **challenge)
+        self.check(date(2027, 1, 19), "challenge", ("100", "days in 100X"), **challenge)
+
+    def test_challenge_counts_down_before_it_starts(self):
+        challenge = {"challenge_name": "100X", "challenge_start": "2026-10-12"}
+        self.check(date(2026, 10, 9), "challenge", ("3", "days until 100X"), **challenge)
+        self.check(date(2026, 10, 11), "challenge", ("1", "day until 100X"), **challenge)
+
+    def test_challenge_defaults(self):
+        self.check(date(2026, 10, 13), "challenge", ("1", "day in challenge"), challenge_name=" ")
 
 
 if __name__ == "__main__":
