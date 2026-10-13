@@ -20,7 +20,7 @@ Then open **Days Left** from the app grid to choose the look. Needs
 | Option  | Choices                                             |
 |---------|-----------------------------------------------------|
 | Style   | Corner, Centered, Year in dots, Progress ring       |
-| Shows   | Days left, Weeks left, % of year gone               |
+| Shows   | Days left, Weeks left, % of year gone, Challenge day |
 | Photo   | Plain background, or any photo (dimmed for contrast) |
 | Theme   | Match system, Dark, Light                           |
 | Accent  | Neutral or one of GNOME's eight accent colours      |
@@ -28,6 +28,11 @@ Then open **Days Left** from the app grid to choose the look. Needs
 Changes apply to the desktop straight away. With **Match system**, GNOME gets a
 light and a dark wallpaper and switches with your system style. A chosen photo
 is copied into `~/.local/share/daysleft/`, so moving the original is fine.
+
+**Challenge day** counts up from a start date you pick, which is day 1, for a
+bootcamp, a 100-day challenge or a habit streak. With the name set to `100X`,
+the day after the start reads "2 · DAYS IN 100X". Before the start date it
+counts down instead.
 
 ## Uninstall
 
